@@ -66,8 +66,10 @@ class ResourceMeta {
     
     /**
      * The url to use when rendering links - e.g. for absolute CDN overrides
+     * dynamicLinkOverride will take priority over the fixed linkOverride
      */
     String linkOverride
+    Closure dynamicLinkOverride
     
     String bundle
     
@@ -276,7 +278,16 @@ class ResourceMeta {
     
     String getLinkUrl() {
         if (!delegate) {
-            return linkOverride ?: _linkUrl 
+            def link = linkOverride
+            if (dynamicLinkOverride) {
+                def dynLinkOverride = dynamicLinkOverride.clone()
+                dynLinkOverride.delegate = this
+                def dynLink = dynLinkOverride()
+                if (dynLink) {
+                    link = dynLink
+                }
+            }
+            return link ?: _linkUrl
         } else {
             return delegate.linkUrl
         }
